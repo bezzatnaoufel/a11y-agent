@@ -1,0 +1,7 @@
+node_modules/
+__pycache__/
+.venv/
+eval/resultats/*
+!eval/resultats/.gitkeep
+.env
+.pytest_cache/

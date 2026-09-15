@@ -1,0 +1,12 @@
+{
+  "name": "a11y-agent",
+  "version": "1.0.0",
+  "description": "Agent libre de droits de test d'accessibilité",
+  "scripts": {
+    "verifier": "python eval/verifier_demo.py"
+  },
+  "dependencies": {
+    "axe-core": "^4.13.0"
+  },
+  "private": true
+}

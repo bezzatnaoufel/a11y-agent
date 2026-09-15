@@ -1,0 +1,6 @@
+a11y-agent : agent libre de droits de test d'accessibilité
+Copyright 2026 Les contributeurs du projet a11y-agent
+
+Ce produit est distribué sous la licence Apache 2.0 (voir LICENSE).
+Il utilise axe-core (Deque Systems, MPL 2.0), téléchargé via npm et non modifié.
+La liste complète des dépendances et de leurs licences est dans docs/LICENCES.md.

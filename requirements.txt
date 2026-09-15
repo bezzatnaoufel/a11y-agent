@@ -1,0 +1,4 @@
+# Dépendances de l'agent (toutes libres de droits)
+playwright>=1.45
+ollama>=0.6
+pydantic>=2.7

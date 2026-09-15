@@ -1,0 +1,5 @@
+# SDK des modèles propriétaires : UNIQUEMENT pour l'évaluation comparative (eval/)
+# L'agent lui-même ne doit jamais en dépendre. Voir docs/decisions/0003.
+-r requirements.txt
+anthropic>=0.40
+google-genai>=1.0
