@@ -17,7 +17,7 @@ chaque fusion dans `main`.
 | Page de démo | 24 violations, page corrigée, vérité terrain validée | ✅ fait |
 | Collecte axe-core | `agent/collect.py` | ✅ fait |
 | Fournisseurs de modèles | `agent/fournisseurs.py`, garde-fou de licence, tests | ✅ fait (non testé contre un vrai modèle) |
-| Navigation clavier | `agent/clavier.py` | ⬜ à faire |
+| Navigation clavier | `agent/clavier.py` : atteignabilité, pièges, focus visible, ordre, modales | ✅ fait |
 | Prompts et analyse | `agent/prompts.py`, `agent/analyse.py` | ⬜ à faire |
 | Rapport et CI | `agent/rapport.py`, `.github/workflows/` | ⬜ à faire |
 | Évaluation comparative | `eval/evaluer.py` | ⬜ à faire |
@@ -42,7 +42,7 @@ cp .env.example .env                 # puis ajustez si besoin
 Vérifiez que tout fonctionne :
 
 ```bash
-python -m pytest -q                  # tests unitaires, sans modèle ni réseau
+python -m pytest -q                  # tous les tests ; -m "not lent" pour sauter le navigateur
 python eval/verifier_demo.py         # doit afficher « VÉRITÉ TERRAIN VALIDE »
 ```
 
@@ -64,6 +64,7 @@ flowchart LR
 | Fichier | Responsabilité |
 |---|---|
 | `agent/collect.py` | Injecte axe-core, filtre les règles WCAG A/AA, simplifie le JSON |
+| `agent/clavier.py` | Teste le comportement au clavier ; même format de sortie que `collect.py` |
 | `agent/schema.py` | Schéma Pydantic de la sortie, commun à tous les modèles |
 | `agent/fournisseurs.py` | Appels aux modèles ; refuse les modèles propriétaires hors évaluation |
 | `demo/` | Pages de test et vérité terrain |
@@ -120,8 +121,15 @@ flowchart LR
 - **axe-core accepte un placeholder comme nom accessible** : le champ courriel
   sans étiquette (V08) n'est pas détecté par axe, alors qu'il viole WCAG 3.3.2.
 - **Le piège clavier bloque le parcours.** Sur la page cassée, un parcours avec
-  Tab s'arrête dans la carte (V23). Le module clavier doit aussi parcourir la
-  page à rebours depuis la fin (Maj+Tab) pour atteindre les éléments suivants.
+  Tab s'arrête dans la carte (V23) ; `clavier.py` repart donc de la fin en
+  Maj+Tab pour atteindre les éléments suivants. À conserver si vous le modifiez.
+- **Comparer les styles au focus demande de la prudence.** `outline-offset`
+  change parfois alors que le contour reste absent : une comparaison brute des
+  styles conclut à tort qu'un indicateur de focus existe. La signature visuelle
+  normalise ce cas ; toute nouvelle propriété comparée doit l'être aussi.
+- **La détection des modales est heuristique** : elle clique les 25 premiers
+  éléments interactifs et observe si une surcouche apparaît. Une application
+  réelle demandera des scénarios déclarés explicitement.
 - **Les exécuteurs GitHub gratuits n'ont pas de GPU.** Un modèle 8B y est très
   lent. Options : exécuteur auto-hébergé, modèle 2B/4B dans le CI, ou partie
   déterministe seule dans le CI.

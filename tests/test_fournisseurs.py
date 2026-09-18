@@ -47,6 +47,7 @@ def test_ollama():
 
 
 def test_anthropic():
+    pytest.importorskip("anthropic")
     bloc = SimpleNamespace(type="tool_use", input=ANALYSE)
     reponse = SimpleNamespace(content=[bloc], usage=SimpleNamespace(input_tokens=1500, output_tokens=400))
     with patch("anthropic.Anthropic") as Client:
@@ -61,6 +62,7 @@ def test_anthropic():
 
 
 def test_gemini():
+    pytest.importorskip("google.genai")
     reponse = SimpleNamespace(text=json.dumps(ANALYSE),
                               usage_metadata=SimpleNamespace(prompt_token_count=1400, candidates_token_count=350))
     with patch("google.genai.Client") as Client:

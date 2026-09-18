@@ -42,10 +42,10 @@ Instructions détaillées : [docs/GUIDE_CONTINUATION.md](docs/GUIDE_CONTINUATION
 ## Structure
 
 ```
-agent/        code de l'agent (collecte, schéma, fournisseurs de modèles)
+agent/        code de l'agent (collecte axe-core, tests clavier, schéma, modèles)
 demo/         page cassée (24 violations), page corrigée, vérité terrain
 eval/         vérification de la démo, évaluation comparative
-tests/        tests unitaires (sans modèle ni réseau)
+tests/        tests unitaires et tests du module clavier sur la démo
 docs/         documentation et décisions d'architecture
 ```
 

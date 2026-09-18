@@ -21,6 +21,7 @@ from playwright.sync_api import Page, sync_playwright
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
+from agent.clavier import executer_clavier  # noqa: E402
 from agent.collect import executer_axe  # noqa: E402
 
 DEMO = RACINE / "demo"
@@ -76,6 +77,24 @@ def verifier_page_cassee(page: Page) -> bool:
         print("  (aucune)")
     ok &= imprevues == 0
 
+    print("\n=== Page cassée : violations attendues au clavier ===")
+    clavier = executer_clavier(page, page.url)
+    for v in VT["violations"]:
+        if not v.get("detectable_clavier"):
+            continue
+        noeuds = [(f["regle"], n) for f in clavier for n in f["noeuds"]]
+        trouve = next((regle for regle, n in noeuds if correspond(page, n["selecteur"], v)), None)
+        ok &= bool(trouve)
+        print(f"  {'✔' if trouve else '✘'} {v['id']} {trouve or 'non détectée':26} {v['titre']}")
+
+    imprevues_clavier = [
+        (f["regle"], n["selecteur"]) for f in clavier for n in f["noeuds"]
+        if not any(correspond(page, n["selecteur"], v) for v in VT["violations"])
+    ]
+    for regle, sel in imprevues_clavier:
+        print(f"  ? {regle} sur {sel} (hors vérité terrain)")
+    ok &= not imprevues_clavier
+
     print("\n=== Page cassée : ce que axe détecte en plus des règles attendues ===")
     for v in VT["violations"]:
         regles = sorted({f["regle"] for f in trouvees for n in f["noeuds"]
@@ -86,8 +105,8 @@ def verifier_page_cassee(page: Page) -> bool:
 
 
 def verifier_page_corrigee(page: Page) -> bool:
-    trouvees = executer_axe(page, inclure_bonnes_pratiques=False)
-    print("\n=== Page corrigée : violations WCAG restantes ===")
+    trouvees = executer_axe(page, inclure_bonnes_pratiques=False) + executer_clavier(page, page.url)
+    print("\n=== Page corrigée : violations restantes (axe et clavier) ===")
     for f in trouvees:
         for n in f["noeuds"]:
             print(f"  ✘ {f['regle']} sur {n['selecteur']} ({f['aide']})")
@@ -114,8 +133,11 @@ def main() -> int:
 
     total = len(VT["violations"])
     par_axe = sum(1 for v in VT["violations"] if v["detectable_axe"])
+    par_clavier = sum(1 for v in VT["violations"] if v.get("detectable_clavier"))
+    deterministe = sum(1 for v in VT["violations"] if v["detectable_axe"] or v.get("detectable_clavier"))
     invisibles = sum(1 for v in VT["violations"] if v["visible_capture"] == "non")
     print(f"\nRésumé : {total} violations, {par_axe} détectables par axe, "
+          f"{par_clavier} au clavier, {deterministe} au total sans IA, "
           f"{invisibles} invisibles sur capture.")
     print("VÉRITÉ TERRAIN VALIDE" if ok_cassee and ok_corrigee else "INCOHÉRENCES À CORRIGER")
     return 0 if ok_cassee and ok_corrigee else 1
