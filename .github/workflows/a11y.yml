@@ -12,7 +12,7 @@ on:
     inputs:
       page:
         description: "Page à analyser"
-        default: "demo/page_cassee.html"
+        default: "demo/page_revue.html"
 
 permissions:
   contents: read
@@ -38,7 +38,7 @@ jobs:
 
       - name: Analyser la page
         run: |
-          python -m agent "${{ inputs.page || 'demo/page_cassee.html' }}" \
+          python -m agent "${{ inputs.page || 'demo/page_revue.html' }}" \
             --sans-modele --rapport rapport.md
           cat rapport.md
 
