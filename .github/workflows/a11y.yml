@@ -1,0 +1,79 @@
+name: Accessibilité
+
+# Analyse la page de démo à chaque Pull Request et publie le rapport en
+# commentaire. Seule la couche déterministe est exécutée ici : les exécuteurs
+# GitHub gratuits n'ont pas de GPU, et un modèle de vision y serait très lent.
+# Pour l'analyse complète, voir docs/GUIDE_CONTINUATION.md (exécuteur
+# auto-hébergé ou lancement manuel).
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      page:
+        description: "Page à analyser"
+        default: "demo/page_cassee.html"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer les dépendances
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+          npm ci
+
+      - name: Analyser la page
+        run: |
+          python -m agent "${{ inputs.page || 'demo/page_cassee.html' }}" \
+            --sans-modele --rapport rapport.md
+          cat rapport.md
+
+      - name: Publier le rapport en commentaire
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const corps = fs.readFileSync('rapport.md', 'utf8');
+            const marqueur = '<!-- a11y-agent -->';
+            const { owner, repo } = context.repo;
+            const numero = context.issue.number;
+
+            // Mettre à jour le commentaire existant plutôt que d'en empiler un
+            // à chaque exécution.
+            const commentaires = await github.rest.issues.listComments({
+              owner, repo, issue_number: numero, per_page: 100,
+            });
+            const precedent = commentaires.data.find(
+              c => c.user.type === 'Bot' && c.body.includes(marqueur)
+            );
+
+            if (precedent) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: precedent.id, body: corps,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: numero, body: corps,
+              });
+            }
+
+      - name: Conserver le rapport
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-accessibilite
+          path: rapport.md

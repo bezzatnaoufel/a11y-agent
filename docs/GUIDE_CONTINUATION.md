@@ -18,8 +18,8 @@ chaque fusion dans `main`.
 | Collecte axe-core | `agent/collect.py` | ✅ fait |
 | Fournisseurs de modèles | `agent/fournisseurs.py`, garde-fou de licence, tests | ✅ fait (non testé contre un vrai modèle) |
 | Navigation clavier | `agent/clavier.py` : atteignabilité, pièges, focus visible, ordre, modales | ✅ fait |
-| Prompts et analyse | `agent/prompts.py`, `agent/analyse.py` | ⬜ à faire |
-| Rapport et CI | `agent/rapport.py`, `.github/workflows/` | ⬜ à faire |
+| Prompts et analyse | `agent/prompts.py`, `agent/analyse.py`, `agent/__main__.py` | ✅ fait (à confronter à un vrai modèle) |
+| Rapport et CI | `agent/rapport.py`, `agent/lexique.py`, `.github/workflows/a11y.yml` | ✅ fait |
 | Évaluation comparative | `eval/evaluer.py` | ⬜ à faire |
 
 ## 2. Démarrage
@@ -67,6 +67,11 @@ flowchart LR
 | `agent/clavier.py` | Teste le comportement au clavier ; même format de sortie que `collect.py` |
 | `agent/schema.py` | Schéma Pydantic de la sortie, commun à tous les modèles |
 | `agent/fournisseurs.py` | Appels aux modèles ; refuse les modèles propriétaires hors évaluation |
+| `agent/prompts.py` | Prompt hybride et prompt « captures seules » de référence |
+| `agent/analyse.py` | Enchaîne collecte, clavier, capture et appel au modèle |
+| `agent/__main__.py` | Ligne de commande : `python -m agent <url>` |
+| `agent/rapport.py` | Rapport Markdown publié en commentaire de PR |
+| `agent/lexique.py` | Traduction française des règles axe-core |
 | `demo/` | Pages de test et vérité terrain |
 | `eval/verifier_demo.py` | Contrôle de cohérence de la vérité terrain |
 | `docs/decisions/` | Décisions d'architecture (ADR) |
@@ -95,6 +100,13 @@ flowchart LR
    un nouvel ADR qui remplace l'ADR 0001.
 3. Définissez `A11Y_MODELE_LIBRE` dans `.env`, puis relancez l'évaluation
    complète : un changement de modèle sans nouvelle mesure n'est pas accepté.
+
+### Traduire une nouvelle règle axe-core
+
+Les messages d'axe-core sont en anglais. `agent/lexique.py` en donne la version
+française (titre, impact, piste). Une règle absente apparaît dans le rapport
+avec la mention « non traduite » : ajoutez-la au lexique en reprenant son
+identifiant tel quel.
 
 ### Ajouter un fournisseur de modèle
 
@@ -130,9 +142,14 @@ flowchart LR
 - **La détection des modales est heuristique** : elle clique les 25 premiers
   éléments interactifs et observe si une surcouche apparaît. Une application
   réelle demandera des scénarios déclarés explicitement.
-- **Les exécuteurs GitHub gratuits n'ont pas de GPU.** Un modèle 8B y est très
-  lent. Options : exécuteur auto-hébergé, modèle 2B/4B dans le CI, ou partie
-  déterministe seule dans le CI.
+- **Les exécuteurs GitHub gratuits n'ont pas de GPU.** Le workflow `a11y.yml`
+  exécute donc la couche déterministe seule (19 violations sur 24, quelques
+  secondes). Pour l'analyse complète en CI : exécuteur auto-hébergé sur une
+  machine à GPU, ou modèle plus petit. Un exécuteur auto-hébergé ne doit jamais
+  traiter une PR provenant d'un dépôt forké.
+- **Matériel constaté** : sur un processeur de 2017 sans GPU exploitable, une
+  analyse par un modèle 4B dépasse plusieurs minutes. Prévoir une machine à GPU
+  pour les mesures du chapitre 6.
 - **Non-déterminisme des LLM**, même à température 0 : toujours plusieurs
   exécutions par configuration.
 - La page de démo est statique. Une vraie application (SPA, états multiples,

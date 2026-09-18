@@ -53,6 +53,9 @@ class FournisseurOllama(Fournisseur):
     nom = "ollama"
     libre = True
     modele_par_defaut = os.getenv("A11Y_MODELE_LIBRE", "qwen3-vl:8b-instruct")
+    # Ollama plafonne le contexte à 4096 jetons par défaut, ce qui ne suffit pas :
+    # une capture pleine page à elle seule en consomme plus d'un millier.
+    contexte = int(os.getenv("A11Y_CONTEXTE", "16384"))
 
     def analyser(self, systeme, texte, images):
         import ollama
@@ -66,7 +69,7 @@ class FournisseurOllama(Fournisseur):
                 {"role": "user", "content": texte, "images": images},
             ],
             format=schema_json_aplati(),
-            options={"temperature": 0, "seed": 42},
+            options={"temperature": 0, "seed": 42, "num_ctx": self.contexte},
         )
         duree = time.perf_counter() - debut
         analyse = Analyse.model_validate_json(reponse.message.content)

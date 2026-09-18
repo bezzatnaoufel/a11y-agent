@@ -42,11 +42,14 @@ def test_ollama():
         appel = Client.return_value.chat.call_args.kwargs
     assert appel["messages"][1]["images"] == [IMAGE]
     assert appel["options"]["temperature"] == 0
+    assert appel["options"]["num_ctx"] >= 8192
     assert analyse.constats[0].criteres_wcag == ["1.4.3"]
     assert mesures.jetons_entree == 1200 and not mesures.donnees_envoyees_a_un_tiers
 
 
 def test_anthropic():
+    # Les SDK propriétaires ne sont pas installés par défaut (règle du projet) :
+    # ces tests ne s'exécutent que sur une machine d'évaluation comparative.
     pytest.importorskip("anthropic")
     bloc = SimpleNamespace(type="tool_use", input=ANALYSE)
     reponse = SimpleNamespace(content=[bloc], usage=SimpleNamespace(input_tokens=1500, output_tokens=400))
@@ -74,6 +77,7 @@ def test_gemini():
 
 
 def test_gemini_sans_modele_configure():
+    pytest.importorskip("google.genai")
     f = creer_fournisseur("gemini", autoriser_proprietaire=True)
     f.modele = ""
     with pytest.raises(ValueError):

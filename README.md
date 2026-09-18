@@ -28,6 +28,14 @@ ollama pull qwen3-vl:8b-instruct
 python -m pytest -q && python eval/verifier_demo.py
 ```
 
+## Lancer une analyse
+
+```bash
+python -m agent demo/page_cassee.html                 # analyse hybride complète
+python -m agent demo/page_cassee.html --sans-modele   # couche déterministe seule
+python -m agent demo/page_cassee.html --mode captures # configuration de référence
+```
+
 Instructions détaillées : [docs/GUIDE_CONTINUATION.md](docs/GUIDE_CONTINUATION.md).
 
 ## Documentation
